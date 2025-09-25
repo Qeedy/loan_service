@@ -1,0 +1,143 @@
+spring:
+  application:
+    name: loan-service
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projectlos?currentSchema=loan
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[format_sql]": true
+        default_schema: loan
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: loan-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/projectlos
+          jwk-set-uri: http://localhost:8080/realms/projectlos/protocol/openid-connect/certs
+
+# Flowable Configuration
+flowable:
+  database-schema-update: true
+  process-definition-location-prefix: classpath:/processes/
+  database-schema: flowable
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/projectlos?currentSchema=loan}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[format_sql]": true
+        default_schema: loan
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:projectlos}
+          jwk-set-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:projectlos}/protocol/openid-connect/certs
+
+# Flowable Configuration for Docker
+flowable:
+  database-schema-update: true
+  process-definition-location-prefix: classpath:/processes/
+  database-schema: flowable
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projectlos?currentSchema=loan&searchPath=loan,flowable
+  kafka:
+    bootstrap-servers: localhost:9092
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:postgresql://localhost:5432/projectlos?currentSchema=loan&searchPath=loan,flowable
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Disable JWT validation for testing
+          issuer-uri: ""
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/projectlos?currentSchema=loan&searchPath=loan,flowable
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:projectlos}
+          jwk-set-uri: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:projectlos}/protocol/openid-connect/certs

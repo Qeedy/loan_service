@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:flowable="http://flowable.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.flowable.org/processdef">
+  <process id="loanApplicationProcess" name="loanApplicationProcess" isExecutable="true">
+    <startEvent id="startEvent1" flowable:formFieldValidation="true"></startEvent>
+    <userTask id="maker-approval" name="Maker Approval" flowable:candidateGroups="MAKER" flowable:formFieldValidation="true"></userTask>
+    <sequenceFlow id="sid-0641A53E-1576-4E18-88FB-7ABA5E38F8C4" sourceRef="startEvent1" targetRef="maker-approval"></sequenceFlow>
+    <sequenceFlow id="sid-EC61FF56-5A2F-4496-BB06-AF42F5376838" sourceRef="maker-approval" targetRef="bureau-checking-process"></sequenceFlow>
+    <serviceTask id="bureau-checking-process" name="Bureau Checking" flowable:expression="${bureauService.checkBureau(customerId, applicationNumber)}"></serviceTask>
+    <userTask id="checker-approval" name="Checker Approval" flowable:candidateGroups="CHECKER" flowable:formFieldValidation="true"></userTask>
+    <sequenceFlow id="sid-074CEBB0-83B9-4F60-A4E5-1C41258C68ED" sourceRef="bureau-checking-process" targetRef="checker-approval"></sequenceFlow>
+    <exclusiveGateway id="sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE"></exclusiveGateway>
+    <sequenceFlow id="sid-497E9978-04C1-4AA0-BED2-E8744A54BBD1" sourceRef="checker-approval" targetRef="sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE"></sequenceFlow>
+    <serviceTask id="update-status-checked" name="Update Status Checked" flowable:expression="${loanApplicationService.updateApplicationVerification(applicationNumber, applicationVerified, addressVerified, contactVerified, collateralVerified, checkerMessage, checkerName)}"></serviceTask>
+    <serviceTask id="update-status-reject" name="Update Status Reject" flowable:expression="${loanApplicationService.rejectApplication(applicationNumber, reason, rejectedBy)}"></serviceTask>
+    <userTask id="approver-approval" name="Approver Approval" flowable:candidateGroups="APPROVER" flowable:formFieldValidation="true"></userTask>
+    <sequenceFlow id="sid-0B7F0C8B-D975-44F0-A898-B9ADCB4BEF93" sourceRef="update-status-checked" targetRef="approver-approval"></sequenceFlow>
+    <exclusiveGateway id="sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703"></exclusiveGateway>
+    <sequenceFlow id="sid-F646A2AC-9A09-4A86-9F89-B94227FE04E5" sourceRef="approver-approval" targetRef="sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703"></sequenceFlow>
+    <endEvent id="sid-374CF889-BC3A-4697-AF7C-9141D5678BD3"></endEvent>
+    <sequenceFlow id="sid-B1001ED4-8D78-4B73-BD1C-54CEE4377F88" sourceRef="update-status-reject" targetRef="sid-374CF889-BC3A-4697-AF7C-9141D5678BD3"></sequenceFlow>
+    <serviceTask id="update-status-approved" name="Update Status Approved" flowable:expression="${loanApplicationService.approveApplication(applicationNumber, approvedAmount, approverUser)}"></serviceTask>
+    <endEvent id="sid-DB6BB457-E8E4-4C46-8F84-570F8C5788B9"></endEvent>
+    <sequenceFlow id="sid-4BF5930C-198A-4D66-A6A1-1F18685ACE3C" sourceRef="update-status-approved" targetRef="sid-DB6BB457-E8E4-4C46-8F84-570F8C5788B9"></sequenceFlow>
+    <sequenceFlow id="sid-2EB2EE48-2A07-4035-A5B7-F80724832DF9" sourceRef="sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE" targetRef="update-status-checked">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvalStatus == 'APPROVED'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-DC10CF2A-8AAE-4F65-AF15-978056CDEEED" sourceRef="sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE" targetRef="update-status-reject">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvalStatus == 'REJECT'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-342A381C-D095-4C46-A4AE-5535AAA103F4" sourceRef="sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703" targetRef="update-status-reject">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvalStatus == 'REJECT'}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="sid-17414DC8-C512-4C9A-8F4D-8606A6B93209" sourceRef="sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703" targetRef="update-status-approved">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approvalStatus == 'APPROVED'}]]></conditionExpression>
+    </sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_loanApplicationProcess">
+    <bpmndi:BPMNPlane bpmnElement="loanApplicationProcess" id="BPMNPlane_loanApplicationProcess">
+      <bpmndi:BPMNShape bpmnElement="startEvent1" id="BPMNShape_startEvent1">
+        <omgdc:Bounds height="30.0" width="30.0" x="100.0" y="163.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="maker-approval" id="BPMNShape_maker-approval">
+        <omgdc:Bounds height="80.0" width="99.99999999999997" x="174.99999478459372" y="137.99999588727962"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="bureau-checking-process" id="BPMNShape_bureau-checking-process">
+        <omgdc:Bounds height="80.0" width="100.0" x="319.999985247851" y="137.99999588727962"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="checker-approval" id="BPMNShape_checker-approval">
+        <omgdc:Bounds height="80.0" width="99.99999999999994" x="464.99997138977193" y="137.99999588727962"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE" id="BPMNShape_sid-B9F8C128-7C66-472B-AA82-4BF5CF13F7AE">
+        <omgdc:Bounds height="40.0" width="40.00000000000006" x="494.9999566376236" y="269.9999919533732"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="update-status-checked" id="BPMNShape_update-status-checked">
+        <omgdc:Bounds height="80.00000000000003" width="99.99999999999994" x="344.99998971819906" y="249.99995470047472"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="update-status-reject" id="BPMNShape_update-status-reject">
+        <omgdc:Bounds height="80.0" width="100.0" x="584.999982565642" y="249.99996960163344"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="approver-approval" id="BPMNShape_approver-approval">
+        <omgdc:Bounds height="80.0" width="100.0" x="344.9999794363984" y="374.99996647238936"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703" id="BPMNShape_sid-2328D424-1D38-46B7-ACE4-B4A77E5D0703">
+        <omgdc:Bounds height="40.0" width="40.00000000000006" x="489.9999794363984" y="394.99996647238936"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-374CF889-BC3A-4697-AF7C-9141D5678BD3" id="BPMNShape_sid-374CF889-BC3A-4697-AF7C-9141D5678BD3">
+        <omgdc:Bounds height="28.0" width="28.0" x="729.999982565642" y="275.99996960163344"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="update-status-approved" id="BPMNShape_update-status-approved">
+        <omgdc:Bounds height="80.00000000000006" width="100.0" x="464.9999575316932" y="464.9999722838415"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="sid-DB6BB457-E8E4-4C46-8F84-570F8C5788B9" id="BPMNShape_sid-DB6BB457-E8E4-4C46-8F84-570F8C5788B9">
+        <omgdc:Bounds height="28.0" width="28.0" x="609.9999575316932" y="490.99997228384154"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="sid-17414DC8-C512-4C9A-8F4D-8606A6B93209" id="BPMNEdge_sid-17414DC8-C512-4C9A-8F4D-8606A6B93209">
+        <omgdi:waypoint x="511.40715602687993" y="433.533684860787"></omgdi:waypoint>
+        <omgdi:waypoint x="512.9887942677378" y="464.9999722838415"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-0641A53E-1576-4E18-88FB-7ABA5E38F8C4" id="BPMNEdge_sid-0641A53E-1576-4E18-88FB-7ABA5E38F8C4">
+        <omgdi:waypoint x="129.94999849020587" y="177.99999943917447"></omgdi:waypoint>
+        <omgdi:waypoint x="174.99999478459372" y="177.99999775482866"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-497E9978-04C1-4AA0-BED2-E8744A54BBD1" id="BPMNEdge_sid-497E9978-04C1-4AA0-BED2-E8744A54BBD1">
+        <omgdi:waypoint x="515.1775217128843" y="217.94999588727964"></omgdi:waypoint>
+        <omgdi:waypoint x="515.4106735662741" y="270.41070888202364"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-342A381C-D095-4C46-A4AE-5535AAA103F4" id="BPMNEdge_sid-342A381C-D095-4C46-A4AE-5535AAA103F4">
+        <omgdi:waypoint x="529.4423751026234" y="415.49996647238936"></omgdi:waypoint>
+        <omgdi:waypoint x="634.999982565642" y="415.49996647238936"></omgdi:waypoint>
+        <omgdi:waypoint x="634.999982565642" y="329.9499696016335"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-F646A2AC-9A09-4A86-9F89-B94227FE04E5" id="BPMNEdge_sid-F646A2AC-9A09-4A86-9F89-B94227FE04E5">
+        <omgdi:waypoint x="444.949979436383" y="415.21620023862306"></omgdi:waypoint>
+        <omgdi:waypoint x="490.41302291465934" y="415.4130099506503"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-B1001ED4-8D78-4B73-BD1C-54CEE4377F88" id="BPMNEdge_sid-B1001ED4-8D78-4B73-BD1C-54CEE4377F88">
+        <omgdi:waypoint x="684.9499825656419" y="289.99996960163344"></omgdi:waypoint>
+        <omgdi:waypoint x="729.999982565642" y="289.99996960163344"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-4BF5930C-198A-4D66-A6A1-1F18685ACE3C" id="BPMNEdge_sid-4BF5930C-198A-4D66-A6A1-1F18685ACE3C">
+        <omgdi:waypoint x="564.9499575316272" y="504.99997228384154"></omgdi:waypoint>
+        <omgdi:waypoint x="609.9999575316932" y="504.99997228384154"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-074CEBB0-83B9-4F60-A4E5-1C41258C68ED" id="BPMNEdge_sid-074CEBB0-83B9-4F60-A4E5-1C41258C68ED">
+        <omgdi:waypoint x="419.94998524785103" y="177.99999588727962"></omgdi:waypoint>
+        <omgdi:waypoint x="464.999971389763" y="177.99999588727962"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-EC61FF56-5A2F-4496-BB06-AF42F5376838" id="BPMNEdge_sid-EC61FF56-5A2F-4496-BB06-AF42F5376838">
+        <omgdi:waypoint x="274.94999478459374" y="177.99999588727962"></omgdi:waypoint>
+        <omgdi:waypoint x="319.999985247851" y="177.99999588727962"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-2EB2EE48-2A07-4035-A5B7-F80724832DF9" id="BPMNEdge_sid-2EB2EE48-2A07-4035-A5B7-F80724832DF9">
+        <omgdi:waypoint x="495.4166170466259" y="290.4166523623771"></omgdi:waypoint>
+        <omgdi:waypoint x="444.9499897181885" y="290.2072316103429"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-DC10CF2A-8AAE-4F65-AF15-978056CDEEED" id="BPMNEdge_sid-DC10CF2A-8AAE-4F65-AF15-978056CDEEED">
+        <omgdi:waypoint x="534.52155968806" y="290.42015645423413"></omgdi:waypoint>
+        <omgdi:waypoint x="584.9999825656232" y="290.2089747150252"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-0B7F0C8B-D975-44F0-A898-B9ADCB4BEF93" id="BPMNEdge_sid-0B7F0C8B-D975-44F0-A898-B9ADCB4BEF93">
+        <omgdi:waypoint x="394.99998642802313" y="329.9499547004748"></omgdi:waypoint>
+        <omgdi:waypoint x="394.9999827224616" y="374.99996647238936"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

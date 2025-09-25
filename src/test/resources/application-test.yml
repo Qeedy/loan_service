@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ""
+
+# Flowable Configuration for Test
+flowable:
+  database-schema-update: true
+  async-executor-activate: false
+  process-definition-location-prefix: classpath:/processes/
+  history-level: audit
+
+logging:
+  level:
+    org.flowable: DEBUG
+    org.springframework.security: DEBUG
